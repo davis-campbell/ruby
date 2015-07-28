@@ -8,7 +8,16 @@ class Game
 		@player_2 = Player.new(gets.chomp)
 
 		@board = Board.new(3)
+		@games_played = 0
+		play
 	end
+
+	def rematch
+		clear_board
+		play
+	end
+
+	private
 
 	def clear_board
 		@board = Board.new(3)
@@ -27,7 +36,11 @@ class Game
 		puts "#{@player_1} will be 'X's, and #{@player_2} will be 'O's."
 		@player_1.type = "X"
 		@player_2.type = "O"
-		@active_player = @player_1
+		if @games_played.even?
+			@active_player = @player_1
+		else
+			@active_player = @player_2
+		end
 		until board_full?
 			turn(@active_player)
 			break if won?
@@ -44,6 +57,7 @@ class Game
 		else
 			puts "It's a draw."
 		end
+		@games_played += 1
 		puts "#{@player_1}: #{@player_1.wins} | #{@player_2}: #{@player_2.wins}"
 		puts "Enter command 'play' to start a new game with new players."
 		puts "Enter command 'rematch' to start a game with the same players."
@@ -154,10 +168,9 @@ puts "Enter command 'play' to start a game."
 
 def play
 	$game = Game.new
-	$game.play
+	return
 end
 
 def rematch
-	$game.clear_board
-	$game.play
+	$game.rematch
 end
