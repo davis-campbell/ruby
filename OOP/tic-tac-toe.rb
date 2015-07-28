@@ -61,6 +61,7 @@ class Game
 		puts "#{@player_1}: #{@player_1.wins} | #{@player_2}: #{@player_2.wins}"
 		puts "Enter command 'play' to start a new game with new players."
 		puts "Enter command 'rematch' to start a game with the same players."
+		puts "Or enter command 'exit' to quit."
 	end
 
 	def turn(player)
@@ -164,8 +165,6 @@ class Game
 
 end
 
-puts "Enter command 'play' to start a game."
-
 def play
 	$game = Game.new
 	return
@@ -173,4 +172,25 @@ end
 
 def rematch
 	$game.rematch
+end
+
+$gg = false
+
+def exit
+	$gg = true
+end
+
+puts "Enter command 'play' to start a game."
+
+until $gg
+	begin
+		command = gets.chomp.downcase
+		send(command)
+	rescue
+		if $game.nil?
+			puts "Oops, that's not a valid command. Valid commands include 'play' and 'exit.'"
+		else
+			puts "Oops, that's not a valid command. Valid commands include 'play,' 'rematch,' and 'exit.'"
+		end
+	end
 end
