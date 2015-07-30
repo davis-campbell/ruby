@@ -120,26 +120,29 @@ class Game
 	end
 
 	def compare(array1, array2)
-		correct = 0
-		correct_number = 0
-		working_code = array2.map { |x| x.to_i }
-		array1.each do |x|
-			working_code.each do |y|
-				if x == y
-					if array1.index(x) == working_code.index(y)
-						correct += 1
-						array1[array1.index(x)] = 0
-						working_code[working_code.index(y)] = 0
-						break
-					else
-						array1[array1.index(x)] = 0
-						working_code[working_code.index(y)] = 0
-						correct_number += 1
-						break
-					end
-				end
+		#p array2
+		sorted1 = array1.sort
+		sorted2 = array2.sort
+		number_correct = 0
+		sorted1.each do |x|
+			index = sorted1.index(x)
+			if x == sorted2[index]
+				number_correct += 1
 			end
+			sorted1[index] = 0
+			sorted2[index] = 0
 		end
+		working_code = array2.map { |x| x.to_i }
+		correct = 0
+		array1.each do |x|
+			index = array1.index(x)
+			if x == working_code[index]
+				correct += 1
+			end
+			array1[index] = 0
+			working_code[index] = 0
+		end
+		correct_number = number_correct - correct
 		puts "Correct: #{correct} | Correct Number: #{correct_number}"
 	end
 
