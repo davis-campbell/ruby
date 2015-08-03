@@ -1,3 +1,5 @@
+require 'yaml'
+
 class Game
 
 	def initialize
@@ -15,6 +17,11 @@ class Game
 		play
 	end
 
+	def continue
+		puts "Welcome back!"
+		play
+	end
+
 	def play
 		until gg?
 			puts "You have guessed these letters: #{@letters_guessed}"
@@ -27,12 +34,14 @@ class Game
 				print ' '
 			end
 			puts "\nYou can still afford #{@mistakes_left} wrong guesses."
-			puts "Enter a letter."
-			letter = gets.chomp
+			puts "Enter a letter or enter 'save' to save game."
+			letter = gets.chomp.downcase
+			save if letter == 'save'
 			guess(letter)
 		end
 		if @mistakes_left == 0
 			puts "You lose..."
+			puts "The word was #{@word}."
 		else
 			puts "You win..."
 		end
@@ -62,5 +71,33 @@ class Game
 		return true
 	end
 
+	def save
+		saved_game = Psych::dump(self)
+		game_file = File.open('../saved_game.txt', 'w')
+		game_file.write(saved_game)
+		game_file.close
+	end
 
 end
+
+
+def play
+	game = Game.new
+end
+
+def quit
+	throw :quit
+end
+
+def load
+	game_file = File.new('../saved_game.txt')
+	saved_game = game_file.read
+	game = Psych::load(saved_game)
+	game.continue
+end
+
+catch :quit do 
+	puts "Enter 'play' to start a new game, 'load' to continue a previous game, or 'quit' to exit."
+	send(gets.chomp)
+end
+
