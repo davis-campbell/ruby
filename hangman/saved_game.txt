@@ -1,42 +1,30 @@
 --- !ruby/object:Game
 mistakes_left: 6
-word: superpremium
+word: parmesan
 letters_guessed:
 - e
 word_hash:
   0:
-    :value: s
+    :value: p
     :guessed: false
   1:
-    :value: u
+    :value: a
     :guessed: false
   2:
-    :value: p
+    :value: r
     :guessed: false
   3:
+    :value: m
+    :guessed: false
+  4:
     :value: e
     :guessed: true
-  4:
-    :value: r
-    :guessed: false
   5:
-    :value: p
+    :value: s
     :guessed: false
   6:
-    :value: r
+    :value: a
     :guessed: false
   7:
-    :value: e
-    :guessed: true
-  8:
-    :value: m
-    :guessed: false
-  9:
-    :value: i
-    :guessed: false
-  10:
-    :value: u
-    :guessed: false
-  11:
-    :value: m
+    :value: n
     :guessed: false
