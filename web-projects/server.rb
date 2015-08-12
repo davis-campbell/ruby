@@ -37,8 +37,8 @@ loop do
       body = response.join("\r\n")
       headers = ["#{version} 200 OK", "Date: #{Time.now.to_s}", "Content-Length: #{File.new(".#{path}", 'r').size}", "\r\n"]
       response = headers.join("\r\n") + body
-#    rescue
-#      response = "#{version} 404 Not Found\r\n"
+    rescue
+      response = "#{version} 404 Not Found\r\n"
     end
   end
   client.print response
