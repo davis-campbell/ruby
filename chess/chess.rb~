@@ -1,0 +1,9 @@
+class Game
+  # Initialize...
+  class Board
+  # Initialize...
+    class Space
+    #Initialize...
+    end
+  end
+end
