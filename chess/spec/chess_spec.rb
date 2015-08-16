@@ -42,14 +42,20 @@ describe Game do
         expect(board[7][6].color).to eq('Black')
       end
     end
-    describe '#locate' do
+    describe '#space' do
       it 'returns the identity of a space' do
-        expect(board.locate('A8')).to eq(board[0][0])
-        expect(board.locate('E4')).to eq(board[4][4])
-        expect(board.locate('D6')).to eq(board[2][3])
+        expect(board.space('A8')).to eq(board[0][0])
+        expect(board.space('E4')).to eq(board[4][4])
+        expect(board.space('D6')).to eq(board[2][3])
       end
     end
     describe Game::Board::Space do
+      describe '#id' do
+        it 'returns, in standard notation, the location of a space' do
+          expect(board[0][0].id).to eq('A8')
+          expect(board[4][5].id).to eq('F4')
+        end
+      end
     end
   end
   describe Game::Player do
@@ -68,8 +74,25 @@ describe Game do
         expect(board[1][0].occupied.moved?).to be false
       end
     end
+    describe '#get_moves' do
+      it 'allows a pawn to move forward either one or two spaces at the beginning' do
+        expect(board[6][0].occupied.get_moves).to include('A3', 'A4')
+        expect(board[1][0].occupied.get_moves).to include('A6', 'A5')
+        expect(board[1][7].occupied.get_moves).to include('H6', 'H5')
+      end
+    end
   end
   describe Game::Rook do
+    describe '#get_moves' do
+      before do
+        @board = board
+        @board.space('A7').occupied = '  '
+      end
+      it 'returns valid moves for a Rook' do
+        expect(@board.space('A8').occupied.get_moves).to include('A7','A6','A5','A4','A3','A2')
+        expect(@board.space('H8').occupied.get_moves).to be_empty
+      end
+    end
   end
   describe Game::Knight do
   end
