@@ -1,4 +1,6 @@
 class Game
+  class InCheck < StandardError
+  end
   def initialize
     print "Welcome to chess! Enter name of Player 1: "
     @player1 = Player.new(1, gets.chomp)
@@ -16,6 +18,10 @@ class Game
       @board.display
       player = @active == "White" ? @player1 : @player2
       puts "#{player}, it's your turn."
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == player.color
+      end
+      puts "You are in check!" if king[0].is_in_check?
       begin
         begin
           print "Enter the location of the piece you want to move (e.g. G4): "
@@ -32,6 +38,9 @@ class Game
         rescue ArgumentError || TypeError
           puts "That's not a valid move; try again or enter 'X'"
           retry
+        rescue InCheck
+          puts "If you do that, you will be/remain in check!"
+          retry
         end
       rescue RuntimeError
         retry
@@ -44,8 +53,9 @@ class Game
 
   end
   class Board < Array
-
+    attr_accessor :pieces
     def initialize
+      @pieces = []
       positions = {
         :Rook   => [0, 7],
         :Knight => [1, 6],
@@ -148,6 +158,7 @@ class Game
       @color = color
       @position = position
       @board = board
+      @board.pieces.push(self)
     end
 
     def to_s
@@ -157,6 +168,7 @@ class Game
     def move(location)
       raise RuntimeError if location == "X"
     end
+
 
 
     def find
@@ -176,6 +188,7 @@ class Game
     end
 
     def get_moves
+      return [] if self.position.nil?
       letters = ('A'..'H').to_a
       moves = []
       white = self.color == "White" ? true : false
@@ -222,10 +235,24 @@ class Game
       super
       moves = get_moves
       raise ArgumentError unless moves.include?(location)
+      original_state = self
+      old_piece = board.space(location).occupied
       @moved = true
       @position.occupied = '  '
       @position = board.space(location)
+      board.pieces.delete(@position.occupied)
       @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      if king[0].is_in_check?
+        puts "You need to get out of check!"
+        @moved = original_state.moved?
+        @position = original_state.position
+        board.space(location).occupied = old_piece
+        @position.occupied = self
+        raise InCheck
+      end
     end
 
     def find
@@ -242,6 +269,7 @@ class Game
       super
     end
     def get_moves
+      return [] if self.position.nil?
       x, y = self.find[0], self.find[1]
       letters = ('A'..'H').to_a
       horiz_moves = []
@@ -265,22 +293,35 @@ class Game
             moves.push(move)
           elsif in_way.color != self.color
             moves.push(move)
-            blocked = true
+            break
           else
-            blocked = true
+            break
           end
         end
       end
       return moves
     end
 
-    def move(space)
+    def move(location)
       super
       moves = get_moves
-      raise ArgumentError unless moves.include?(space)
+      raise ArgumentError unless moves.include?(location)
+      original_state = self
+      old_piece = board.space(location).occupied
       @position.occupied = '  '
-      @position = board.space(space)
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
       @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      if king[0].is_in_check?
+        puts "You need to get out of check!"
+        @position = original_state.position
+        board.space(location).occupied = old_piece
+        @position.occupied = self
+        raise InCheck
+      end
     end
   end
 
@@ -293,6 +334,7 @@ class Game
       super
     end
     def get_moves
+      return [] if self.position.nil?
       letters = ('A'..'H').to_a
       moves = [[1,2],[-1,2],[-1,-2],[1,-2],[2,1],[-2,1],[-2,-1],[2,-1]]
       moves.map! do |move|
@@ -308,13 +350,26 @@ class Game
       return moves
     end
 
-    def move(space)
+    def move(location)
       super
       moves = get_moves
-      raise ArgumentError unless moves.include?(space)
+      raise ArgumentError unless moves.include?(location)
+      original_state = self
+      old_piece = board.space(location).occupied
       @position.occupied = '  '
-      @position = board.space(space)
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
       @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      if king[0].is_in_check?
+        puts "You need to get out of check!"
+        @position = original_state.position
+        board.space(location).occupied = old_piece
+        @position.occupied = self
+        raise InCheck
+      end
     end
   end
 
@@ -328,6 +383,7 @@ class Game
     end
 
     def get_moves
+      return [] if self.position.nil?
       letters = ('A'..'H').to_a
       start = self.find
       directions = [[1,1],[-1,1],[-1,-1],[1,-1]]
@@ -345,22 +401,35 @@ class Game
             moves.push(new_space)
           elsif board.space(new_space).occupied.color != self.color
             moves.push(new_space)
-            blocked = true
+            break
           else
-            blocked = true
+            break
           end
         end
       end
       moves
     end
 
-    def move(space)
+    def move(location)
       super
       moves = get_moves
-      raise ArgumentError unless moves.include?(space)
+      raise ArgumentError unless moves.include?(location)
+      original_state = self
+      old_piece = board.space(location).occupied
       @position.occupied = '  '
-      @position = board.space(space)
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
       @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      if king[0].is_in_check?
+        puts "You need to get out of check!"
+        @position = original_state.position
+        board.space(location).occupied = old_piece
+        @position.occupied = self
+        raise InCheck
+      end
     end
 
   end
@@ -375,6 +444,7 @@ class Game
     end
 
     def get_moves
+      return [] if self.position.nil?
       letters = ('A'..'H').to_a
       start = self.find
       directions = [[1,1],[-1,1],[-1,-1],[1,-1],[1,0],[-1,0],[0,1],[0,-1]]
@@ -397,13 +467,32 @@ class Game
       moves
     end
 
-    def move(space)
+    def move(location)
       super
       moves = get_moves
-      raise ArgumentError unless moves.include?(space)
+      raise ArgumentError unless moves.include?(location)
+      original_state = self
+      old_piece = board.space(location).occupied
       @position.occupied = '  '
-      @position = board.space(space)
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
       @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      if king[0].is_in_check?
+        puts "You need to get out of check!"
+        @position = original_state.position
+        board.space(location).occupied = old_piece
+        @position.occupied = self
+        raise InCheck
+      end
+    end
+
+    def is_in_check?
+      enemies = board.pieces.select { |piece| piece.color != self.color }
+      return true if enemies.any? { |enemy| enemy.get_moves.include?(self.find) }
+      false
     end
 
   end
@@ -417,6 +506,7 @@ class Game
       super
     end
     def get_moves
+      return [] if self.position.nil?
       letters = ('A'..'H').to_a
       start = self.find
       directions = [[1,1],[-1,1],[-1,-1],[1,-1],[1,0],[-1,0],[0,1],[0,-1]]
@@ -434,22 +524,35 @@ class Game
             moves.push(new_space)
           elsif board.space(new_space).occupied.color != self.color
             moves.push(new_space)
-            blocked = true
+            break
           else
-            blocked = true
+            break
           end
         end
       end
       moves
     end
 
-    def move(space)
+    def move(location)
       super
       moves = get_moves
-      raise ArgumentError unless moves.include?(space)
+      raise ArgumentError unless moves.include?(location)
+      original_state = self
+      old_piece = board.space(location).occupied
       @position.occupied = '  '
-      @position = board.space(space)
+      @position = board.space(location)
+      @position.occupied.position = nil unless @position.occupied == '  '
       @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      if king[0].is_in_check?
+        puts "You need to get out of check!"
+        @position = original_state.position
+        board.space(location).occupied = old_piece
+        @position.occupied = self
+        raise InCheck
+      end
     end
   end
 
