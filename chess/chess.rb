@@ -7,6 +7,7 @@ class Game
     print "Enter name of Player 2: "
     @player2 = Player.new(2, gets.chomp)
     @board = Board.new
+    @board.setup
     @turns = 0
     @active = "White"
     puts "#{@player1} will be white, and #{@player2} will be black."
@@ -47,15 +48,27 @@ class Game
       end
       @active = @active == "White" ? "Black" : "White"
     end
+    @board.display
+    puts "Checkmate! #{player} wins!"
   end
 
   def gg?
-
+    kings = @board.pieces.select { |piece| piece.class == Game::King }
+    kings.any?(&:checkmate?)
   end
   class Board < Array
     attr_accessor :pieces
     def initialize
       @pieces = []
+      8.times do |y|
+        row = []
+        8.times { |x| row.push(Space.new(x, y)) }
+        self.push(row)
+      end
+    end
+
+    def setup
+
       positions = {
         :Rook   => [0, 7],
         :Knight => [1, 6],
@@ -63,18 +76,6 @@ class Game
         :Queen  => [3],
         :King   => [4],
       }
-      8.times do |y|
-        row = []
-        8.times { |x| row.push(Space.new(x, y)) }
-        self.push(row)
-      end
-      self.each do |row|
-        row_index = self.index(row)
-        row.each do |space|
-          space_index = row.index(space)
-          space.color = (row_index + space_index).even? ? "White" : "Black"
-        end
-      end
       positions.each do |piece, places|
         places.each do |space|
           self[0][space].occupied = Object.const_get("Game::#{piece}").new("Black", self[0][space], self)
@@ -174,6 +175,9 @@ class Game
     def find
       return @position.to_s
     end
+
+
+
   end
   class Pawn < Piece
 
@@ -250,9 +254,28 @@ class Game
         @moved = original_state.moved?
         @position = original_state.position
         board.space(location).occupied = old_piece
+        board.pieces.push(old_piece) unless old_piece == '  '
         @position.occupied = self
         raise InCheck
       end
+    end
+    def try(location)
+      out_of_check = true
+      original_state = self.position
+      old_piece = board.space(location).occupied
+      @position.occupied = '  '
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
+      @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      out_of_check = king[0].is_in_check? ? false : true
+      @position = original_state
+      board.space(location).occupied = old_piece
+      board.pieces.push(old_piece) unless old_piece == '  '
+      @position.occupied = self
+      return out_of_check
     end
 
     def find
@@ -319,9 +342,28 @@ class Game
         puts "You need to get out of check!"
         @position = original_state.position
         board.space(location).occupied = old_piece
+        board.pieces.push(old_piece) unless old_piece == '  '
         @position.occupied = self
         raise InCheck
       end
+    end
+    def try(location)
+      out_of_check = true
+      original_state = self.position
+      old_piece = board.space(location).occupied
+      @position.occupied = '  '
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
+      @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      out_of_check = king[0].is_in_check? ? false : true
+      @position = original_state
+      board.space(location).occupied = old_piece
+      board.pieces.push(old_piece) unless old_piece == '  '
+      @position.occupied = self
+      return out_of_check
     end
   end
 
@@ -367,9 +409,28 @@ class Game
         puts "You need to get out of check!"
         @position = original_state.position
         board.space(location).occupied = old_piece
+        board.pieces.push(old_piece) unless old_piece == '  '
         @position.occupied = self
         raise InCheck
       end
+    end
+    def try(location)
+      out_of_check = true
+      original_state = self.position
+      old_piece = board.space(location).occupied
+      @position.occupied = '  '
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
+      @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      out_of_check = king[0].is_in_check? ? false : true
+      @position = original_state
+      board.space(location).occupied = old_piece
+      board.pieces.push(old_piece) unless old_piece == '  '
+      @position.occupied = self
+      return out_of_check
     end
   end
 
@@ -427,9 +488,28 @@ class Game
         puts "You need to get out of check!"
         @position = original_state.position
         board.space(location).occupied = old_piece
+        board.pieces.push(old_piece) unless old_piece == '  '
         @position.occupied = self
         raise InCheck
       end
+    end
+    def try(location)
+      out_of_check = true
+      original_state = self.position
+      old_piece = board.space(location).occupied
+      @position.occupied = '  '
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
+      @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      out_of_check = king[0].is_in_check? ? false : true
+      @position = original_state
+      board.space(location).occupied = old_piece
+      board.pieces.push(old_piece) unless old_piece == '  '
+      @position.occupied = self
+      return out_of_check
     end
 
   end
@@ -453,7 +533,7 @@ class Game
         letter = letters.index(start[0])
         number = start[1].to_i
         letter += direction[0]
-        letter += direction[1]
+        number += direction[1]
         new_space = "#{letters[letter]}#{number}"
         next unless board.contains?(new_space)
         if board.space(new_space).occupied == '  '
@@ -484,15 +564,54 @@ class Game
         puts "You need to get out of check!"
         @position = original_state.position
         board.space(location).occupied = old_piece
+        board.pieces.push(old_piece) unless old_piece == '  '
         @position.occupied = self
         raise InCheck
       end
+    end
+    def try(location)
+      out_of_check = true
+      original_state = self.position
+      old_piece = board.space(location).occupied
+      @position.occupied = '  '
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
+      @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      out_of_check = king[0].is_in_check? ? false : true
+      @position = original_state
+      board.space(location).occupied = old_piece
+      board.pieces.push(old_piece) unless old_piece == '  '
+      @position.occupied = self
+      return out_of_check
     end
 
     def is_in_check?
       enemies = board.pieces.select { |piece| piece.color != self.color }
       return true if enemies.any? { |enemy| enemy.get_moves.include?(self.find) }
       false
+    end
+
+    def checkmate?
+      return false unless is_in_check?
+      allies = board.pieces.select { |piece| piece.color == self.color }
+      allies.none? do |ally|
+        ally.get_moves.any? do |move|
+          ally.try(move)
+        end
+      end
+    end
+
+    def stalemate?
+      return false if is_in_check?
+      allies = board.pieces.select { |piece| piece.color == self.color }
+      allies.none? do |ally|
+        ally.get_moves.any? do |move|
+          ally.try(move)
+        end
+      end
     end
 
   end
@@ -550,9 +669,28 @@ class Game
         puts "You need to get out of check!"
         @position = original_state.position
         board.space(location).occupied = old_piece
+        board.pieces.push(old_piece) unless old_piece == '  '
         @position.occupied = self
         raise InCheck
       end
+    end
+    def try(location)
+      out_of_check = true
+      original_state = self.position
+      old_piece = board.space(location).occupied
+      @position.occupied = '  '
+      @position = board.space(location)
+      board.pieces.delete(@position.occupied)
+      @position.occupied = self
+      king = @board.pieces.select do |piece|
+        piece.class == Game::King && piece.color == self.color
+      end
+      out_of_check = king[0].is_in_check? ? false : true
+      @position = original_state
+      board.space(location).occupied = old_piece
+      board.pieces.push(old_piece) unless old_piece == '  '
+      @position.occupied = self
+      return out_of_check
     end
   end
 
