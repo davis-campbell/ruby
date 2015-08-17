@@ -95,8 +95,24 @@ describe Game do
     end
   end
   describe Game::Knight do
+    describe '#get_moves' do
+      it 'returns valid moves for a Knight' do
+        expect(board.space('G1').occupied.get_moves).to include('F3','H3')
+        expect(board.space('G1').occupied.get_moves).not_to include('E2')
+      end
+    end
   end
   describe Game::Bishop do
+    describe '#get_moves' do
+      before do
+        @board = board
+        @board.space('E2').occupied = '  '
+      end
+      it 'returns valid moves for a Bishop' do
+        expect(board.space('F1').occupied.get_moves).to include('E2','D3','C4','B5','A6')
+        expect(board.space('F1').occupied.get_moves).not_to include('G2','H3')
+      end
+    end
   end
   describe Game::King do
   end

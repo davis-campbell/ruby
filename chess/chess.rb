@@ -22,18 +22,18 @@ class Game
           selected = @board.locate(gets.chomp.capitalize, player.color)
           puts selected[1]
           piece = selected[0].occupied
-        rescue ArgumentError
+        rescue ArgumentError || TypeError
           puts "Pick a space with one of your pieces on it."
           retry
         end
         puts "Where would you like to move it? Enter a location or 'X' to choose a different piece."
         begin
           piece.move(gets.chomp.capitalize)
-        rescue ArgumentError
+        rescue ArgumentError || TypeError
           puts "That's not a valid move; try again or enter 'X'"
           retry
         end
-      rescue StandardError
+      rescue RuntimeError
         retry
       end
       @active = @active == "White" ? "Black" : "White"
@@ -155,8 +155,9 @@ class Game
     end
 
     def move(location)
-      raise StandardError if location == "X"
+      raise RuntimeError if location == "X"
     end
+
 
     def find
       return @position.to_s
@@ -216,10 +217,12 @@ class Game
       return moves
     end
 
+
     def move(location)
       super
       moves = get_moves
       raise ArgumentError unless moves.include?(location)
+      @moved = true
       @position.occupied = '  '
       @position = board.space(location)
       @position.occupied = self
@@ -289,6 +292,30 @@ class Game
     def find
       super
     end
+    def get_moves
+      letters = ('A'..'H').to_a
+      moves = [[1,2],[-1,2],[-1,-2],[1,-2],[2,1],[-2,1],[-2,-1],[2,-1]]
+      moves.map! do |move|
+        start = self.find
+        finish = "#{letters[letters.index(start[0]) + move[0]]}#{start[1].to_i + move[1]}"
+        finish
+      end
+      moves.select! { |move| board.contains?(move) }
+      moves.select! do |move|
+        in_way = board.space(move).occupied
+        in_way == '  ' || in_way.color != self.color
+      end
+      return moves
+    end
+
+    def move(space)
+      super
+      moves = get_moves
+      raise ArgumentError unless moves.include?(space)
+      @position.occupied = '  '
+      @position = board.space(space)
+      @position.occupied = self
+    end
   end
 
   class Bishop < Piece
@@ -299,6 +326,43 @@ class Game
     def find
       super
     end
+
+    def get_moves
+      letters = ('A'..'H').to_a
+      start = self.find
+      directions = [[1,1],[-1,1],[-1,-1],[1,-1]]
+      moves = []
+      directions.each do |direction|
+        blocked = false
+        letter = letters.index(start[0])
+        number = start[1].to_i
+        until blocked
+          letter += direction[0]
+          number += direction[1]
+          new_space = "#{letters[letter]}#{number}"
+          break unless board.contains?(new_space)
+          if board.space(new_space).occupied == '  '
+            moves.push(new_space)
+          elsif board.space(new_space).occupied.color != self.color
+            moves.push(new_space)
+            blocked = true
+          else
+            blocked = true
+          end
+        end
+      end
+      moves
+    end
+
+    def move(space)
+      super
+      moves = get_moves
+      raise ArgumentError unless moves.include?(space)
+      @position.occupied = '  '
+      @position = board.space(space)
+      @position.occupied = self
+    end
+
   end
 
   class King < Piece
@@ -309,6 +373,39 @@ class Game
     def find
       super
     end
+
+    def get_moves
+      letters = ('A'..'H').to_a
+      start = self.find
+      directions = [[1,1],[-1,1],[-1,-1],[1,-1],[1,0],[-1,0],[0,1],[0,-1]]
+      moves = []
+      directions.each do |direction|
+        letter = letters.index(start[0])
+        number = start[1].to_i
+        letter += direction[0]
+        letter += direction[1]
+        new_space = "#{letters[letter]}#{number}"
+        next unless board.contains?(new_space)
+        if board.space(new_space).occupied == '  '
+          moves.push(new_space)
+        elsif board.space(new_space).occupied.color != self.color
+          moves.push(new_space)
+        else
+          next
+        end
+      end
+      moves
+    end
+
+    def move(space)
+      super
+      moves = get_moves
+      raise ArgumentError unless moves.include?(space)
+      @position.occupied = '  '
+      @position = board.space(space)
+      @position.occupied = self
+    end
+
   end
 
   class Queen < Piece
@@ -318,6 +415,41 @@ class Game
     end
     def find
       super
+    end
+    def get_moves
+      letters = ('A'..'H').to_a
+      start = self.find
+      directions = [[1,1],[-1,1],[-1,-1],[1,-1],[1,0],[-1,0],[0,1],[0,-1]]
+      moves = []
+      directions.each do |direction|
+        blocked = false
+        letter = letters.index(start[0])
+        number = start[1].to_i
+        until blocked
+          letter += direction[0]
+          number += direction[1]
+          new_space = "#{letters[letter]}#{number}"
+          break unless board.contains?(new_space)
+          if board.space(new_space).occupied == '  '
+            moves.push(new_space)
+          elsif board.space(new_space).occupied.color != self.color
+            moves.push(new_space)
+            blocked = true
+          else
+            blocked = true
+          end
+        end
+      end
+      moves
+    end
+
+    def move(space)
+      super
+      moves = get_moves
+      raise ArgumentError unless moves.include?(space)
+      @position.occupied = '  '
+      @position = board.space(space)
+      @position.occupied = self
     end
   end
 
