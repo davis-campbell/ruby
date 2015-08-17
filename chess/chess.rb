@@ -1,3 +1,6 @@
+
+require 'yaml'
+
 class Game
   class InCheck < StandardError
   end
@@ -11,7 +14,6 @@ class Game
     @turns = 0
     @active = "White"
     puts "#{@player1} will be white, and #{@player2} will be black."
-    play
   end
 
   def play
@@ -26,7 +28,11 @@ class Game
       begin
         begin
           print "Enter the location of the piece you want to move (e.g. G4): "
-          selected = @board.locate(gets.chomp.capitalize, player.color)
+          input = gets.chomp
+          if input.downcase == 'save'
+            save
+          end
+          selected = @board.locate(input.capitalize, player.color)
           puts selected[1]
           piece = selected[0].occupied
         rescue ArgumentError || TypeError
@@ -35,7 +41,11 @@ class Game
         end
         puts "Where would you like to move it? Enter a location or 'X' to choose a different piece."
         begin
-          piece.move(gets.chomp.capitalize)
+          input = gets.chomp
+          if input.downcase == 'save'
+            save
+          end
+          piece.move(input.capitalize)
         rescue ArgumentError || TypeError
           puts "That's not a valid move; try again or enter 'X'"
           retry
@@ -51,6 +61,16 @@ class Game
     @board.display
     puts "Checkmate! #{player} wins!"
   end
+
+  def save
+		saved_game = Psych::dump(self)
+		game_file = File.open('../saved_game.txt', 'w')
+		game_file.write(saved_game)
+		game_file.close
+    exit
+	end
+
+
 
   def gg?
     kings = @board.pieces.select { |piece| piece.class == Game::King }
@@ -704,4 +724,24 @@ class Game
       @name
     end
   end
+end
+def play
+  game = Game.new
+  game.play
+end
+
+def load
+  game_file = File.new('../saved_game.txt')
+  saved_game = game_file.read
+  game = Psych::load(saved_game)
+  game.play
+end
+
+def quit
+  throw :quit
+end
+
+catch :quit do
+	puts "Enter 'play' to start a new game, 'load' to continue a previous game, or 'quit' to exit."
+	send(gets.chomp)
 end
